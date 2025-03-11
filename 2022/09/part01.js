@@ -1,64 +1,42 @@
 const fs = require('fs');
+const input = fs.readFileSync('./input.txt', 'utf8').trim().split('\n');
 
-const input = fs.readFileSync('./input.txt', 'utf8').trim();
-const moves = input.split('\n');
+let rope = [{x:0,y:0},{x:0,y:0}];
+let tailPositions = new Set();
+let maxD = Math.sqrt(2), cornerD = Math.sqrt(1+2**2);
 
-let head = {x:0, y:0};
-let tail = {x:0, y:0};
-const tailPosition = new Set();
+const getRopeDistance = () => Math.sqrt((Math.abs(rope[1].y - rope[0].y))**2 + (Math.abs(rope[1].x-rope[0].x))**2);
 
-for (let move of moves) {
-    let [direction, distance] = move.split(' ');
-    distance = parseInt(distance);
-
-    for (let step = 0; step < distance; step++) {
-        if (direction == 'R') {
-            head.x++;
-            if (Math.abs(head.x - tail.x) > 1) {
-                tail.x++;
-                if (tail.y > head.y) {
-                    tail.y--;
-                } else if (tail.y < head.y) {
-                    tail.y++;
-                }
-            }
-        }
-        if (direction == 'L') {
-            head.x--;
-            if (Math.abs(head.x - tail.x) > 1) {
-                tail.x--;
-                if (tail.y > head.y) {
-                    tail.y--;
-                } else if (tail.y < head.y) {
-                    tail.y++;
-                }
-            }
-        }
-        if (direction == 'U') {
-            head.y++;
-            if (Math.abs(head.y - tail.y) > 1) {
-                tail.y++;
-                if (tail.x > head.x) {
-                    tail.x--;
-                } else if (tail.x < head.x) {
-                    tail.x++;
-                }
-            }
-        }
-        if (direction == 'D') {
-            head.y--;
-            if (Math.abs(head.y - tail.y) > 1) {
-                tail.y--;
-                if (tail.x > head.x) {
-                    tail.x--;
-                } else if (tail.x < head.x) {
-                    tail.x++;
-                }
-            }
-        }
-        tailPosition.add(tail.x + ',' + tail.y);
-    }
+for (let instruction of input) {
+  let [direction, distance] = instruction.split(' ')
+  distance = parseInt(distance);
+  for (let i = 0; i < distance; i++) moveRope(direction);
 }
 
-console.log(tailPosition.size);
+function moveRope(direction) {
+  switch (direction) {
+    case "D":
+      rope[0].y--;
+      if (getRopeDistance() == cornerD) rope[1].x = rope[0].x;
+      if (getRopeDistance() > maxD) rope[1].y--;
+      break;
+    case "U":
+      rope[0].y++;
+      if (getRopeDistance() == cornerD) rope[1].x = rope[0].x;
+      if (getRopeDistance() > maxD) rope[1].y++;
+      break;
+    case "L":
+      rope[0].x--;
+      if (getRopeDistance() == cornerD) rope[1].y = rope[0].y;
+      if (getRopeDistance() > maxD) rope[1].x--;
+      break;
+    case "R":
+      rope[0].x++;
+      if (getRopeDistance() == cornerD) rope[1].y = rope[0].y;
+      if (getRopeDistance() > maxD) rope[1].x++;
+      break;
+  }
+  tailPositions.add(`${rope[1].x},${rope[1].y}`);
+}
 
+console.log(tailPositions.size);

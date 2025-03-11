@@ -1,105 +1,79 @@
 const fs = require('fs');
+const input = fs.readFileSync('./input.txt', 'utf8').trim().split('\n');
 
-const input = fs.readFileSync('./input.txt', 'utf8').trim();
-const moves = input.split('\n');
+let rope = new Array(10).fill(null).map(() => ({ x: 0, y: 0 }));
+let tailPositions = new Set();
+let maxD = Math.sqrt(2), cornerD = Math.sqrt(1+2**2);
 
-const tailLength = 9;
-let head = {x:0, y:0};
-let tails = [];
-for (let i = 0; i < 9; i++) {
-    tails[i] = {x:0, y:0};
-}
-const tailPosition = new Set();
+const getRopeDistance = (knotN) => Math.sqrt((Math.abs(rope[knotN].y - rope[knotN - 1].y))**2 + (Math.abs(rope[knotN].x-rope[knotN - 1].x))**2);
 
-const diagAway = Math.sqrt(Math.pow(1 - 0, 2) + Math.pow(1 - 0, 2));
-let moveNumber = 0;
-
-for (let move of moves) {
-    let [direction, distance] = move.split(' ');
-    distance = parseInt(distance);
-
-    for (let step = 0; step < distance; step++) {
-        moveNumber++;
-        if (direction == 'R') {
-            head.x++;
-            for (let i = 0; i < tails.length; i++) {
-                let tail = tails[i];
-                let prevTail = tails[i-1] || head;
-                const distance = Math.sqrt(Math.pow(prevTail.x - tail.x, 2) + Math.pow(prevTail.y - tail.y, 2));
-                if (distance > 2) {
-                    tail.x++;
-                    if (tail.y > prevTail.y) {
-                        tail.y--;
-                    } else if (tail.y < prevTail.y) {
-                        tail.y++;
-                    }
-                } else if (distance > diagAway) {
-                    tail.x = (tail.x + prevTail.x) / 2;
-                    tail.y = (tail.y + prevTail.y) / 2;
-                }
-            }
-        }
-        if (direction == 'L') {
-            head.x--;
-            for (let i = 0; i < tails.length; i++) {
-                let tail = tails[i];
-                let prevTail = tails[i-1] || head;
-                const distance = Math.sqrt(Math.pow(prevTail.x - tail.x, 2) + Math.pow(prevTail.y - tail.y, 2));
-                if (distance > 2) {
-                    tail.x--;
-                    if (tail.y > prevTail.y) {
-                        tail.y--;
-                    } else if (tail.y < prevTail.y) {
-                        tail.y++;
-                    }
-                } else if (distance > diagAway) {
-                    tail.x = (tail.x + prevTail.x) / 2;
-                    tail.y = (tail.y + prevTail.y) / 2;
-                }
-            }
-        }
-        if (direction == 'U') {
-            head.y++;
-            for (let i = 0; i < tails.length; i++) {
-                let tail = tails[i];
-                let prevTail = tails[i-1] || head;
-                const distance = Math.sqrt(Math.pow(prevTail.x - tail.x, 2) + Math.pow(prevTail.y - tail.y, 2));
-                if (i==8) console.log(distance)
-                if (distance > 2) {
-                    tail.y++;
-                    if (tail.x > prevTail.x) {
-                        tail.x--;
-                    } else if (tail.x < prevTail.x) {
-                        tail.x++;
-                    }
-                } else if (distance > diagAway) {
-                    tail.x = (tail.x + prevTail.x) / 2;
-                    tail.y = (tail.y + prevTail.y) / 2;
-                }
-            }
-        }
-        if (direction == 'D') {
-            head.y--;
-            for (let i = 0; i < tails.length; i++) {
-                let tail = tails[i];
-                let prevTail = tails[i-1] || head;
-                const distance = Math.sqrt(Math.pow(prevTail.x - tail.x, 2) + Math.pow(prevTail.y - tail.y, 2));
-                if (distance > 2) {
-                    tail.y--;
-                    if (tail.x > prevTail.x) {
-                        tail.x--;
-                    } else if (tail.x < prevTail.x) {
-                        tail.x++;
-                    }
-                } else if (distance > diagAway) {
-                    tail.x = (tail.x + prevTail.x) / 2;
-                    tail.y = (tail.y + prevTail.y) / 2;
-                }
-            }
-        }
-        tailPosition.add(tails[8].x + ',' + tails[8].y);
-        console.log(direction, moveNumber, head, tails[1])
-    }
+for (let instruction of input) {
+  let [direction, distance] = instruction.split(' ')
+  distance = parseInt(distance);
+  for (let i = 0; i < distance; i++) moveRope(direction);
 }
 
-console.log(tailPosition.size);
+function moveRope(direction) {
+  switch (direction) {
+    case "D":
+      rope[0].y--;
+      for (let i = 1; i < 10; i++) {
+        let ropeDistance = getRopeDistance(i);
+        if (ropeDistance == cornerD) {
+            if (rope[i - 1].x < rope[i].x) {
+                rope[i].x--;
+            } else {
+                rope[i].x++;
+            }
+        }
+        if (ropeDistance > maxD) rope[i].y--;
+      }
+      break;
+    case "U":
+      rope[0].y++;
+      for (let i = 1; i < 10; i++) {
+        let ropeDistance = getRopeDistance(i);
+        if (ropeDistance == cornerD) {
+            if (rope[i - 1].x < rope[i].x) {
+                rope[i].x--;
+            } else {
+                rope[i].x++;
+            }
+        }
+        if (ropeDistance > maxD) rope[i].y++;
+      }
+      console.log(rope[4]);
+      break;
+    case "L":
+      rope[0].x--;
+      for (let i = 1; i < 10; i++) {
+        let ropeDistance = getRopeDistance(i);
+        if (ropeDistance == cornerD) {
+            if (rope[i - 1].y < rope[i].y) {
+                rope[i].y--;
+            } else {
+                rope[i].y++;
+            }
+        }
+        if (ropeDistance > maxD) rope[i].x--;
+      }
+      break;
+    case "R":
+      rope[0].x++;
+      for (let i = 1; i < 10; i++) {
+        let ropeDistance = getRopeDistance(i);
+        if (ropeDistance == cornerD) {
+            if (rope[i - 1].y < rope[i].y) {
+                rope[i].y--;
+            } else {
+                rope[i].y++;
+            }
+        }
+        if (ropeDistance > maxD) rope[i].x++;
+      }
+      break;
+  }
+  tailPositions.add(`${rope[9].x},${rope[9].y}`);
+}
+
+console.log(tailPositions.size);
